@@ -46,7 +46,7 @@ jobs:
           args: --release
       - run:
           mkdir dist
-          cp target/release/ludusavi dist
+          cp target/release/ludusavi dist/
         if: ${{ matrix.os != 'windows-latest' }}
       - run:
           mkdir dist
