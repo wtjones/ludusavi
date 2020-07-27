@@ -47,12 +47,12 @@ jobs:
       - run:
           mkdir dist
           cp target/release/ludusavi dist
-        if: ${{ matrix.os != "windows-latest" }}
+        if: ${{ matrix.os != 'windows-latest' }}
       - run:
           mkdir dist
           copy target/release/ludusavi.exe dist
           copy assets/ludusavi.ico dist
-        if: ${{ matrix.os == "windows-latest" }}
+        if: ${{ matrix.os == 'windows-latest' }}
       - uses: actions/upload-artifact@v2
         with:
           name: ludusavi-v${{ env.LUDUSAVI_VERSION }}-${{ matrix.artifact-name }}
