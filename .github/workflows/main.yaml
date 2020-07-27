@@ -12,15 +12,19 @@ jobs:
           - os: windows-latest
             rust-target: x86_64-pc-windows-msvc
             artifact-name: win64
+            artifact-file: ludusavi.exe
           - os: windows-latest
             rust-target: i686-pc-windows-msvc
             artifact-name: win32
+            artifact-file: ludusavi.exe
           - os: ubuntu-16.04
             rust-target: x86_64-unknown-linux-gnu
             artifact-name: linux
+            artifact-file: ludusavi
           - os: macos-latest
             rust-target: x86_64-apple-darwin
             artifact-name: mac
+            artifact-file: ludusavi
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/setup-python@v2
@@ -38,25 +42,21 @@ jobs:
           toolchain: stable
           target: ${{ matrix.rust-target }}
           override: true
-      - run: sudo apt-get update && sudo apt-get install -y gcc libxcb-composite0-dev
-        if: ${{ matrix.os == 'ubuntu-16.04' }}
+      - if: ${{ matrix.os == 'ubuntu-16.04' }}
+        run: sudo apt-get update && sudo apt-get install -y gcc libxcb-composite0-dev
       - uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release
-      - run:
-          mkdir dist
-          cp target/release/ludusavi dist/
-        if: ${{ matrix.os != 'windows-latest' }}
-      - run:
-          mkdir dist
-          copy target/release/ludusavi.exe dist
-          copy assets/ludusavi.ico dist
-        if: ${{ matrix.os == 'windows-latest' }}
-      - uses: actions/upload-artifact@v2
+      - if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          Invoke-WebRequest https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe -O rcedit.exe
+          ./rcedit.exe target/release/${{ matrix.artifact-file }} --set-icon assets/icon.ico
+        shell: powershell
+      - uses: actions/upload-artifact@v1
         with:
           name: ludusavi-v${{ env.LUDUSAVI_VERSION }}-${{ matrix.artifact-name }}
-          path: dist/*
+          path: target/release/${{ matrix.artifact-file }}
 
   test:
     strategy:
@@ -73,10 +73,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - run: sudo apt-get update && sudo apt-get install -y gcc libxcb-composite0-dev
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-      - run: reg import tests/ludusavi.reg
-        if: ${{ matrix.os == 'windows-latest' }}
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get update && sudo apt-get install -y gcc libxcb-composite0-dev
+      - if: ${{ matrix.os == 'windows-latest' }}
+        run: reg import tests/ludusavi.reg
       - uses: actions-rs/cargo@v1
         with:
           command: test
