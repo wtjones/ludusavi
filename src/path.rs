@@ -8,7 +8,8 @@ const TYPICAL_SEPARATOR: &str = "/";
 #[cfg(not(target_os = "windows"))]
 const ATYPICAL_SEPARATOR: &str = "\\";
 
-const UNC_PREFIX: &str = "\\\\?\\";
+const UNC_PREFIX: &str = "\\\\";
+const UNC_LOCAL_PREFIX: &str = "\\\\?\\";
 
 fn parse_home(path: &str) -> String {
     if path == "~" || path.starts_with("~/") || path.starts_with("~\\") {
@@ -79,7 +80,11 @@ fn interpret<P: Into<String>>(path: P, basis: &Option<String>) -> String {
             );
             format!(
                 "{}{}",
-                if cfg!(target_os = "windows") { UNC_PREFIX } else { "" },
+                if cfg!(target_os = "windows") && !dedotted.starts_with(UNC_LOCAL_PREFIX) {
+                    UNC_LOCAL_PREFIX
+                } else {
+                    ""
+                },
                 dedotted.replace(ATYPICAL_SEPARATOR, TYPICAL_SEPARATOR)
             )
         }
@@ -89,7 +94,7 @@ fn interpret<P: Into<String>>(path: P, basis: &Option<String>) -> String {
 /// Convert a path into a nice form for display and storage.
 /// On Windows, this produces non-UNC paths.
 fn render<P: Into<String>>(path: P) -> String {
-    path.into().replace(UNC_PREFIX, "").replace("\\", "/")
+    path.into().replace(UNC_LOCAL_PREFIX, "").replace("\\", "/")
 }
 
 fn render_pathbuf(value: &std::path::PathBuf) -> String {
@@ -157,6 +162,56 @@ impl StrictPath {
             std::fs::remove_dir_all(&self.interpret())?;
         }
         Ok(())
+    }
+
+    pub fn joined(&self, other: &str) -> Self {
+        Self::new(format!("{}/{}", self.interpret(), other))
+    }
+
+    pub fn create_parent_dir(&self) -> std::io::Result<()> {
+        let mut pb = self.as_std_path_buf();
+        pb.pop();
+        std::fs::create_dir_all(&pb)?;
+        Ok(())
+    }
+
+    /// Usage:
+    /// "C:/foo/bar" -> ("C:", "foo")
+    /// "\\?\C:\foo\bar" -> ("C:", "foo/bar")
+    /// "\\remote\foo\bar" -> ("\\remote", "foo/bar")
+    /// "/foo/bar" -> ("", "foo/bar")
+    #[cfg(target_os = "windows")]
+    pub fn split_drive(&self) -> (String, String) {
+        let interpreted = self.interpret();
+
+        if interpreted.starts_with(UNC_LOCAL_PREFIX) {
+            // Local UNC path - simplify to a classic drive for user-friendliness:
+            let split: Vec<_> = interpreted[UNC_LOCAL_PREFIX.len()..].splitn(2, '\\').collect();
+            if split.len() == 2 {
+                return (split[0].to_owned(), split[1].replace("\\", "/"));
+            }
+        } else if interpreted.starts_with(UNC_PREFIX) {
+            // Remote UNC path - can't simplify to classic drive:
+            let split: Vec<_> = interpreted[UNC_PREFIX.len()..].splitn(2, '\\').collect();
+            if split.len() == 2 {
+                return (format!("{}{}", UNC_PREFIX, split[0]), split[1].replace("\\", "/"));
+            }
+        }
+
+        // This shouldn't normally happen, but we have a fallback just in case.
+        ("".to_owned(), self.raw.replace("\\", "/"))
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn split_drive(&self) -> (String, String) {
+        (
+            "",
+            if self.raw.starts_with("/") {
+                self.raw[1..].to_string()
+            } else {
+                self.raw.to_string()
+            },
+        )
     }
 }
 

@@ -1533,6 +1533,7 @@ dependencies = [
  "maplit",
  "native-dialog",
  "pretty_assertions",
+ "rand",
  "rayon",
  "realia",
  "reqwest",
