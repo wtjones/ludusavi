@@ -177,11 +177,9 @@ impl StrictPath {
         Ok(())
     }
 
-    /// Usage:
-    /// "C:/foo/bar" -> ("C:", "foo")
-    /// "\\?\C:\foo\bar" -> ("C:", "foo/bar")
-    /// "\\remote\foo\bar" -> ("\\remote", "foo/bar")
-    /// "/foo/bar" -> ("", "foo/bar")
+    /// This splits a path into a drive (e.g., `C:` or `\\?\D:`) and the remainder.
+    /// This is only used during backups to record drives in mapping.yaml, so it
+    /// only has to deal with paths that can occur on the host OS.
     #[cfg(target_os = "windows")]
     pub fn split_drive(&self) -> (String, String) {
         let interpreted = self.interpret();
@@ -445,12 +443,14 @@ mod tests {
         }
 
         #[test]
-        fn can_split_windows_path_into_drive_and_remainder() {
+        #[cfg(target_os = "windows")]
+        fn can_split_drive_for_windows_path() {
             assert_eq!((s("C:"), s("foo/bar")), StrictPath::new(s("C:/foo/bar")).split_drive());
         }
 
         #[test]
-        fn can_split_local_unc_path_into_drive_and_remainder() {
+        #[cfg(target_os = "windows")]
+        fn can_split_drive_for_local_unc_path() {
             assert_eq!(
                 (s("C:"), s("foo/bar")),
                 StrictPath::new(s(r#"\\?\C:\foo\bar"#)).split_drive()
@@ -458,19 +458,22 @@ mod tests {
         }
 
         #[test]
-        fn can_split_remote_unc_path_into_drive_and_remainder() {
-            // TODO: should be `\\remote` and `foo\bar`.
-            // Even so, UNC paths to a mapped network drive seem to work in the backup.
+        #[cfg(target_os = "windows")]
+        fn can_split_drive_for_remote_unc_path() {
+            // TODO: Should be `\\remote` and `foo\bar`.
+            // Despite this, when backing up to a machine-local network share,
+            // it gets resolved to the actual local drive and therefore works.
+            // Unsure about behavior for a remote network share at this time.
             assert_eq!(
-                (s(""), s(r#"/remote/foo/bar"#)),
+                (s(""), s("/remote/foo/bar")),
                 StrictPath::new(s(r#"\\remote\foo\bar"#)).split_drive()
             );
         }
 
         #[test]
-        fn can_split_nonwindows_path_into_drive_and_remainder() {
-            // TODO: should be `` and `foo/bar`.
-            assert_eq!((s("C:"), s("foo/bar")), StrictPath::new(s("/foo/bar")).split_drive());
+        #[cfg(not(target_os = "windows"))]
+        fn can_split_drive_for_nonwindows_path() {
+            assert_eq!((s(""), s("foo/bar")), StrictPath::new(s("/foo/bar")).split_drive());
         }
     }
 }

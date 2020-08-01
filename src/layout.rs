@@ -246,16 +246,16 @@ mod tests {
     }
 
     fn layout() -> BackupLayout {
-        BackupLayout::new(StrictPath::new(repo()))
+        BackupLayout::new(StrictPath::new(format!("{}/tests/backup", repo())))
     }
 
     #[test]
     fn can_find_game_folder_with_matching_name() {
         assert_eq!(
             StrictPath::new(if cfg!(target_os = "windows") {
-                format!("\\\\?\\{}/game1", repo())
+                format!("\\\\?\\{}\\tests\\backup\\game1", repo())
             } else {
-                format!("{}/game1", repo())
+                format!("{}/tests/backup/game1", repo())
             }),
             layout().game_folder("game1")
         );
@@ -263,8 +263,13 @@ mod tests {
 
     #[test]
     fn can_find_game_folder_with_rename() {
+        dbg!(layout());
         assert_eq!(
-            StrictPath::new(format!("{}/game3-renamed", repo())),
+            StrictPath::new(if cfg!(target_os = "windows") {
+                format!("\\\\?\\{}\\tests\\backup\\game3-renamed", repo())
+            } else {
+                format!("{}/tests/backup/game3-renamed", repo())
+            }),
             layout().game_folder("game3")
         );
     }
@@ -272,7 +277,11 @@ mod tests {
     #[test]
     fn can_find_game_folder_that_does_not_exist() {
         assert_eq!(
-            StrictPath::new(format!("{}/nonexistent", repo())),
+            if cfg!(target_os = "windows") {
+                StrictPath::new(format!("\\\\?\\{}\\tests\\backup/nonexistent", repo()))
+            } else {
+                StrictPath::new(format!("{}/tests/backup/nonexistent", repo()))
+            },
             layout().game_folder("nonexistent")
         );
     }
