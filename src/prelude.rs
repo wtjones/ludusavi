@@ -779,8 +779,8 @@ mod tests {
             ScanInfo {
                 game_name: s("game1"),
                 found_files: hashset! {
-                    ScannedFile { path: make_path("file1.txt"), size: 1, original_path: Some(StrictPath::new(s("X:\\file1.txt"))) },
-                    ScannedFile { path: make_path("file2.txt"), size: 2, original_path: Some(StrictPath::new(s("X:\\file2.txt"))) },
+                    ScannedFile { path: make_path("file1.txt"), size: 1, original_path: Some(StrictPath::new(s(if cfg!(target_os = "windows") { "X:\\file1.txt" } else { "X:/file1.txt" }))) },
+                    ScannedFile { path: make_path("file2.txt"), size: 2, original_path: Some(StrictPath::new(s(if cfg!(target_os = "windows") { "X:\\file2.txt" } else { "X:/file2.txt" }))) },
                 },
                 ..Default::default()
             },

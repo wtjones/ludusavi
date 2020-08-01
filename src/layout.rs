@@ -187,6 +187,7 @@ impl BackupLayout {
         game_folder.joined("mapping.yaml")
     }
 
+    #[allow(dead_code)]
     pub fn game_registry_file(&self, game_folder: &StrictPath) -> StrictPath {
         game_folder.joined("registry.yaml")
     }

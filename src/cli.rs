@@ -893,14 +893,14 @@ Overall:
                     game_name: s("foo"),
                     found_files: hashset! {
                         ScannedFile {
-                            path: StrictPath::new(s("C:/backup/file1")),
+                            path: StrictPath::new(format!("{}/backup/file1", drive())),
                             size: 102_400,
-                            original_path: Some(StrictPath::new(s("C:/original/file1"))),
+                            original_path: Some(StrictPath::new(format!("{}/original/file1", drive()))),
                         },
                         ScannedFile {
-                            path: StrictPath::new(s("C:/backup/file2")),
+                            path: StrictPath::new(format!("{}/backup/file2", drive())),
                             size: 51_200,
-                            original_path: Some(StrictPath::new(s("C:/original/file2"))),
+                            original_path: Some(StrictPath::new(format!("{}/original/file2", drive()))),
                         },
                     },
                     found_registry_keys: hashset! {},
@@ -1046,14 +1046,14 @@ Overall:
                     game_name: s("foo"),
                     found_files: hashset! {
                         ScannedFile {
-                            path: StrictPath::new(s("C:/backup/file1")),
+                            path: StrictPath::new(format!("{}/backup/file1", drive())),
                             size: 100,
-                            original_path: Some(StrictPath::new(s("C:/original/file1"))),
+                            original_path: Some(StrictPath::new(format!("{}/original/file1", drive()))),
                         },
                         ScannedFile {
-                            path: StrictPath::new(s("C:/backup/file2")),
+                            path: StrictPath::new(format!("{}/backup/file2", drive())),
                             size: 50,
-                            original_path: Some(StrictPath::new(s("C:/original/file2"))),
+                            original_path: Some(StrictPath::new(format!("{}/original/file2", drive()))),
                         },
                     },
                     found_registry_keys: hashset! {},

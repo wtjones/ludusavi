@@ -8,7 +8,9 @@ const TYPICAL_SEPARATOR: &str = "/";
 #[cfg(not(target_os = "windows"))]
 const ATYPICAL_SEPARATOR: &str = "\\";
 
+#[allow(dead_code)]
 const UNC_PREFIX: &str = "\\\\";
+#[allow(dead_code)]
 const UNC_LOCAL_PREFIX: &str = "\\\\?\\";
 
 fn parse_home(path: &str) -> String {
