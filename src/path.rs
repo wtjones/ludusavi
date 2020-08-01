@@ -205,7 +205,7 @@ impl StrictPath {
     #[cfg(not(target_os = "windows"))]
     pub fn split_drive(&self) -> (String, String) {
         (
-            "",
+            "".to_owned(),
             if self.raw.starts_with("/") {
                 self.raw[1..].to_string()
             } else {
