@@ -235,3 +235,45 @@ impl BackupLayout {
         files
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    fn repo() -> String {
+        env!("CARGO_MANIFEST_DIR").to_string()
+    }
+
+    fn layout() -> BackupLayout {
+        BackupLayout::new(StrictPath::new(repo()))
+    }
+
+    #[test]
+    fn can_find_game_folder_with_matching_name() {
+        assert_eq!(
+            StrictPath::new(if cfg!(target_os = "windows") {
+                format!("\\\\?\\{}/game1", repo())
+            } else {
+                format!("{}/game1", repo())
+            }),
+            layout().game_folder("game1")
+        );
+    }
+
+    #[test]
+    fn can_find_game_folder_with_rename() {
+        assert_eq!(
+            StrictPath::new(format!("{}/game3-renamed", repo())),
+            layout().game_folder("game3")
+        );
+    }
+
+    #[test]
+    fn can_find_game_folder_that_does_not_exist() {
+        assert_eq!(
+            StrictPath::new(format!("{}/nonexistent", repo())),
+            layout().game_folder("nonexistent")
+        );
+    }
+}

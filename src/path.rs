@@ -208,7 +208,7 @@ impl StrictPath {
     pub fn split_drive(&self) -> (String, String) {
         (
             "".to_owned(),
-            if self.raw.starts_with("/") {
+            if self.raw.starts_with('/') {
                 self.raw[1..].to_string()
             } else {
                 self.raw.to_string()
@@ -243,6 +243,10 @@ impl<'de> serde::Deserialize<'de> for StrictPath {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn s(text: &str) -> String {
+        text.to_string()
+    }
 
     fn repo() -> String {
         env!("CARGO_MANIFEST_DIR").to_owned()
@@ -438,6 +442,35 @@ mod tests {
             assert!(StrictPath::new(repo()).exists());
             assert!(StrictPath::new(format!("{}/README.md", repo())).exists());
             assert!(!StrictPath::new(format!("{}/fake", repo())).exists());
+        }
+
+        #[test]
+        fn can_split_windows_path_into_drive_and_remainder() {
+            assert_eq!((s("C:"), s("foo/bar")), StrictPath::new(s("C:/foo/bar")).split_drive());
+        }
+
+        #[test]
+        fn can_split_local_unc_path_into_drive_and_remainder() {
+            assert_eq!(
+                (s("C:"), s("foo/bar")),
+                StrictPath::new(s(r#"\\?\C:\foo\bar"#)).split_drive()
+            );
+        }
+
+        #[test]
+        fn can_split_remote_unc_path_into_drive_and_remainder() {
+            // TODO: should be `\\remote` and `foo\bar`.
+            // Even so, UNC paths to a mapped network drive seem to work in the backup.
+            assert_eq!(
+                (s(""), s(r#"/remote/foo/bar"#)),
+                StrictPath::new(s(r#"\\remote\foo\bar"#)).split_drive()
+            );
+        }
+
+        #[test]
+        fn can_split_nonwindows_path_into_drive_and_remainder() {
+            // TODO: should be `` and `foo/bar`.
+            assert_eq!((s("C:"), s("foo/bar")), StrictPath::new(s("/foo/bar")).split_drive());
         }
     }
 }

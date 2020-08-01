@@ -159,6 +159,9 @@ pub fn game_file_restoration_target(
 ) -> (StrictPath, Option<StrictPath>) {
     let mut redirected_target = original_target.render();
     for redirect in redirects {
+        if redirect.source.raw().trim().is_empty() || redirect.target.raw().trim().is_empty() {
+            continue;
+        }
         let source = redirect.source.render();
         let target = redirect.target.render();
         if !source.is_empty() && !target.is_empty() && redirected_target.starts_with(&source) {
